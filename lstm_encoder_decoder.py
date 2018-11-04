@@ -8,6 +8,8 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
+from keras.layers import RepeatVector
+from keras.layers import TimeDistributed
 from math import sqrt
 from matplotlib import pyplot
 import numpy as np
@@ -72,9 +74,15 @@ def prepare_data(series, n_test, n_lag, n_seq):
 def fit_lstm(train, n_lag, n_seq, n_batch, nb_epoch, n_neurons):
 	# reshape training into [samples, timesteps, features]
 	X, y = train[:, 0:n_lag], train[:, n_lag:]
+	# print train
+	# print X
+	# print y
 	X = X.reshape(X.shape[0], 1, X.shape[1])
 	# design network
 	model = Sequential()
+	model.add(LSTM(128, batch_input_shape=(n_batch, X.shape[1], X.shape[2]), stateful=True, return_sequences=True))
+	model.add(LSTM(32, batch_input_shape=(n_batch, X.shape[1], X.shape[2]), stateful=True))
+	model.add(RepeatVector(3))
 	model.add(LSTM(128, batch_input_shape=(n_batch, X.shape[1], X.shape[2]), stateful=True, return_sequences=True))
 	model.add(LSTM(32, batch_input_shape=(n_batch, X.shape[1], X.shape[2]), stateful=True))
 	model.add(Dense(y.shape[1]))
