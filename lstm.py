@@ -1,5 +1,8 @@
-import pandas as pd
-import numpy as np
+from pandas import DataFrame
+from pandas import Series
+from pandas import concat
+from pandas import read_csv
+from pandas import datetime
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
@@ -7,15 +10,17 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from math import sqrt
 from matplotlib import pyplot
+import numpy as np
+from numpy import array
 
 # date-time parsing function for loading the dataset
 def parser(x):
-	return pd.datetime.strptime('190'+x, '%Y-%m')
+	return datetime.strptime('190'+x, '%Y-%m')
  
 # convert time series into supervised learning problem
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 	n_vars = 1 if type(data) is list else data.shape[1]
-	df = pd.DataFrame(data)
+	df = DataFrame(data)
 	cols, names = list(), list()
 	# input sequence (t-n, ... t-1)
 	for i in range(n_in, 0, -1):
@@ -29,7 +34,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 		else:
 			names += [('var%d(t+%d)' % (j+1, i)) for j in range(n_vars)]
 	# put it all together
-	agg = pd.concat(cols, axis=1)
+	agg = concat(cols, axis=1)
 	agg.columns = names
 	# drop rows with NaN values
 	if dropnan:
@@ -42,7 +47,7 @@ def difference(dataset, interval=1):
 	for i in range(interval, len(dataset)):
 		value = dataset[i] - dataset[i - interval]
 		diff.append(value)
-	return pd.Series(diff)
+	return Series(diff)
  
 # transform series into train and test sets for supervised learning
 def prepare_data(series, n_test, n_lag, n_seq):
@@ -115,7 +120,7 @@ def inverse_transform(series, forecasts, scaler, n_test):
 	inverted = list()
 	for i in range(len(forecasts)):
 		# create array from forecast
-		forecast = np.array(forecasts[i])
+		forecast = array(forecasts[i])
 		forecast = forecast.reshape(1, len(forecast))
 		# invert scaling
 		inv_scale = scaler.inverse_transform(forecast)
@@ -158,7 +163,7 @@ def plot_forecasts(series, forecasts, n_test):
 	pyplot.show()
  
 # load dataset
-series = pd.read_csv('shampoo_sales.csv', header=0, parse_dates=[0], index_col=0, squeeze=True, date_parser=parser)
+series = read_csv('shampoo_sales.csv', header=0, parse_dates=[0], index_col=0, squeeze=True, date_parser=parser)
 # configure
 n_lag = 1
 n_seq = 3
